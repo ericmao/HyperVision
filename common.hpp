@@ -24,7 +24,7 @@
 // #define NDEBUG
 #include <assert.h>
 #include <time.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 #include "option.hpp"
 #include "json.hpp"

@@ -21,7 +21,7 @@ private:
     shared_ptr<vector<shared_ptr<short_edge> > > p_short_edges;
 
     u_int16_t LENGTH_BIN_SIZE = 10;
-    u_int16_t TIME_BIN_SIZE = 1e-3;
+    double TIME_BIN_SIZE = 1e-3;
     u_int16_t EDGE_LONG_LINE = 15;
     u_int16_t EDGE_AGG_LINE = 20;
 

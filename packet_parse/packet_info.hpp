@@ -136,20 +136,22 @@ inline auto convert_str_addr4(const string & str) -> pkt_addr4_t {
     if (str == "0.0.0.0") {
         return 0;
     }
-    if (!pcpp_ip.isValid()) {
-        FATAL_ERROR("Invalid IPv4");
-    } else {
+    // Try to convert and catch any exceptions
+    try {
         return pcpp_ip.toInt();
+    } catch (...) {
+        FATAL_ERROR("Invalid IPv4");
     }
 }
 inline auto convert_str_addr6(const string & str) -> pkt_addr6_t {
     pcpp::IPv6Address pcpp_ip(str);
-    if (!pcpp_ip.isValid()) {
-        FATAL_ERROR("Invalid IPv6");
-    } else {
+    // Try to convert and catch any exceptions
+    try {
         __pkt_addr6 __t;
         memcpy(__t.byte_rep, pcpp_ip.toBytes(), sizeof(__t));
         return __t.num_rep;
+    } catch (...) {
+        FATAL_ERROR("Invalid IPv6");
     }
 }
 

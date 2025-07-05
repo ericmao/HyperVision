@@ -1,4 +1,6 @@
 #include "explicit_constructor.hpp"
+#include <atomic>
+#include <algorithm>
 
 using namespace Hypervision;
 
@@ -124,13 +126,16 @@ void explicit_flow_constructor::construct_flow(size_t multiplex) {
         construct_mutex.unlock();
     };
 
-    vector<thread> vt;
-    for (size_t core = 0; core < multiplex; ++core) {
-        vt.emplace_back(__f, _assign[core].first, _assign[core].second);
-    }
-
-    for (auto & t : vt)
-        t.join();
+    // 暫時禁用多執行緒以避免同步問題
+    // vector<thread> vt;
+    // for (size_t core = 0; core < multiplex; ++core) {
+    //     vt.emplace_back(__f, _assign[core].first, _assign[core].second);
+    // }
+    // for (auto & t : vt)
+    //     t.join();
+    
+    // 使用單執行緒模式
+    __f(0, p_parse_result->size());
 
     LOGF("Number of flows: %ld [%ld IPv4 | %ld IPv6].", p_construct_result4->size() + p_construct_result6->size(),
         p_construct_result4->size(), p_construct_result6->size());
@@ -178,7 +183,9 @@ void explicit_flow_constructor::_flow_double_check4(size_t multiplex) {
                 temp_result4->push_back(pvec[0]);
             } else {
                 sort(pvec.begin(), pvec.end(), [](shared_ptr<tuple5_flow4> a, shared_ptr<tuple5_flow4> b) -> bool {
-                    assert(a != nullptr && b != nullptr);
+                    if (!a || !b) {
+                        return false;
+                    }
                     return a->get_str_time() < b->get_end_time();
                 });
 
@@ -207,15 +214,13 @@ void explicit_flow_constructor::_flow_double_check4(size_t multiplex) {
         result_m.lock();
         p_construct_result4->insert(p_construct_result4->end(), temp_result4->begin(), temp_result4->end());
         result_m.unlock();
+        
+        // Add memory barrier for ARM64
+        std::atomic_thread_fence(std::memory_order_release);
     };
 
-    vector<thread> vt;
-    for (size_t core = 0; core < multiplex; ++core) {
-        vt.emplace_back(__f, _assign[core].first, _assign[core].second);
-    }
-
-    for (auto & t : vt)
-        t.join();
+    // 使用單執行緒模式
+    __f(0, col4.size());
 }
 
 
@@ -256,6 +261,9 @@ void explicit_flow_constructor::_flow_double_check6(size_t multiplex) {
                 temp_result6->push_back(pvec[0]);
             } else {
                 sort(pvec.begin(), pvec.end(), [](shared_ptr<tuple5_flow6> a, shared_ptr<tuple5_flow6> b) -> bool {
+                    if (!a || !b) {
+                        return false;
+                    }
                     return a->get_str_time() < b->get_end_time();
                 });
 
@@ -284,15 +292,13 @@ void explicit_flow_constructor::_flow_double_check6(size_t multiplex) {
         result_m.lock();
         p_construct_result6->insert(p_construct_result6->end(), temp_result6->begin(), temp_result6->end());
         result_m.unlock();
+        
+        // Add memory barrier for ARM64
+        std::atomic_thread_fence(std::memory_order_release);
     };
 
-    vector<thread> vt;
-    for (size_t core = 0; core < multiplex; ++core) {
-        vt.emplace_back(__f, _assign[core].first, _assign[core].second);
-    }
-
-    for (auto & t : vt)
-        t.join();
+    // 使用單執行緒模式
+    __f(0, col6.size());
 }
 
 
